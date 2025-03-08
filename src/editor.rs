@@ -1,14 +1,12 @@
-mod terminal;
-mod view;
-
 use core::cmp::min;
-use std::io::Error;
-
 use crossterm::event::{
     read,
     Event::{self, Key},
     KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
 };
+use std::io::Error;
+mod terminal;
+mod view;
 use terminal::{Position, Size, Terminal};
 use view::View;
 
@@ -22,6 +20,7 @@ struct Location {
 pub struct Editor {
     should_quit: bool,
     location: Location,
+    view: View,
 }
 
 impl Editor {
@@ -111,7 +110,7 @@ impl Editor {
             Terminal::clear_screen()?;
             Terminal::print("Goodbye.\r\n")?;
         } else {
-            View::draw_rows()?;
+            self.view.render()?;
             Terminal::move_caret_to(Position {
                 col: self.location.x,
                 row: self.location.y,
