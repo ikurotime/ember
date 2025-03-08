@@ -26,6 +26,7 @@ pub struct Editor {
 impl Editor {
     pub fn run(&mut self) {
         Terminal::initialize().unwrap();
+        self.handle_args();
         let result = self.repl();
         Terminal::terminate().unwrap();
         result.unwrap();
@@ -40,6 +41,13 @@ impl Editor {
             self.evaluate_event(&event)?;
         }
         Ok(())
+    }
+
+    fn handle_args(&mut self) {
+        let args: Vec<String> = std::env::args().collect();
+        if args.len() > 1 {
+            self.view.load_file(&args[1]).unwrap();
+        }
     }
 
     fn move_point(&mut self, key_code: KeyCode) -> Result<(), Error> {
