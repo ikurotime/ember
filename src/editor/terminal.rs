@@ -9,7 +9,7 @@ use crossterm::{
 };
 use std::io::Write;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Default, Copy, Clone)]
 pub struct Size {
     pub width: usize,
     pub height: usize,

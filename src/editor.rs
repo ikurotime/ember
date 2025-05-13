@@ -38,7 +38,7 @@ impl Editor {
                 break;
             }
             let event = read()?;
-            self.evaluate_event(&event)?;
+            self.evaluate_event(event)?;
         }
         Ok(())
     }
@@ -46,7 +46,7 @@ impl Editor {
     fn handle_args(&mut self) {
         let args: Vec<String> = std::env::args().collect();
         if args.len() > 1 {
-            self.view.load_file(&args[1]).unwrap();
+            self.view.load(&args[1]).unwrap();
         }
     }
 
@@ -83,35 +83,44 @@ impl Editor {
         self.location = Location { x, y };
         Ok(())
     }
-    pub fn evaluate_event(&mut self, event: &Event) -> Result<(), Error> {
-        if let Key(KeyEvent {
-            code,
-            modifiers,
-            kind: KeyEventKind::Press,
-            ..
-        }) = event
-        {
-            match code {
-                KeyCode::Char('q') if *modifiers == KeyModifiers::CONTROL => {
+    pub fn evaluate_event(&mut self, event: Event) -> Result<(), Error> {
+        match event {
+            Event::Key(KeyEvent {
+                code,
+                kind: KeyEventKind::Press,
+                modifiers,
+                ..
+            }) => match (code, modifiers) {
+                (KeyCode::Char('q'), KeyModifiers::CONTROL) => {
                     self.should_quit = true;
                 }
-                KeyCode::Up
-                | KeyCode::Down
-                | KeyCode::Left
-                | KeyCode::Right
-                | KeyCode::PageUp
-                | KeyCode::PageDown
-                | KeyCode::Home
-                | KeyCode::End => {
-                    self.move_point(*code)?;
+                (
+                    KeyCode::Up
+                    | KeyCode::Down
+                    | KeyCode::Left
+                    | KeyCode::Right
+                    | KeyCode::PageUp
+                    | KeyCode::PageDown
+                    | KeyCode::Home
+                    | KeyCode::End,
+                    _,
+                ) => {
+                    self.move_point(code)?;
                 }
-                _ => (),
+                _ => {}
+            },
+            Event::Resize(width_u16, height_u16) => {
+                #[allow(clippy::as_conversions)]
+                let height = height_u16 as usize;
+                let width = width_u16 as usize;
+                self.view.resize(Size { width, height });
             }
+            _ => {}
         }
         Ok(())
     }
 
-    pub fn refresh_screen(&self) -> Result<(), Error> {
+    pub fn refresh_screen(&mut self) -> Result<(), Error> {
         Terminal::hide_caret()?;
         Terminal::move_caret_to(Position::default())?;
         if self.should_quit {
